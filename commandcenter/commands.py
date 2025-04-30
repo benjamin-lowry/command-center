@@ -6,7 +6,7 @@ import datetime
 
 from chirp.common.printing import cprint
 
-from .mock_commands import fake_command
+from commandcenter.mock_commands import fake_command
 
 def choice_test():
     from chirp.common.input import test
