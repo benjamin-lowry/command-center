@@ -16,9 +16,9 @@ from tornado import gen
 from time import sleep
 
 if os.environ.get('MOCK'):
-    from . import mock_commands as commands
+    from commandcenter import mock_commands as commands
 else:
-    from . import commands
+    from commandcenter import commands
 
 
 COMMAND_PAGES = [
@@ -83,8 +83,10 @@ class CommandCenterApplication(Application):
         self.loop.add_callback(self._write_message, slug, data)
 
     def send_choice(self, slug):
-        if self.current_task.slug != slug: return
-        if len(self.current_task.choices == 0): return
+        if not self.current_task: return
+        else:
+            if self.current_task.slug != slug: return
+            if len(self.current_task.choices) == 0: return
         obj = dict(type='choice',
                    prompt=self.current_task.prompt,
                    choices=self.current_task.choices,
@@ -179,6 +181,9 @@ class MessageHandler(WebSocketHandler):
 
     def open(self):
         app.sockets[self.slug].add(self)
+        # send the current choice dialog (if one is present) every time a
+        # connection is opened (in case page is reloaded while prompting for
+        # choice)
         app.send_choice(self.slug)
 
     def on_close(self):
@@ -198,9 +203,14 @@ class CommandTask(object):
         self.future = None
         self.done_callbacks = []
         self.error_callbacks = []
+        # The current choice prompt, possible choices, and whether custom
+        # (i.e. fill in the text box) choices are allowed
         self.prompt = ""
         self.choices = []
         self.choices_allow_custom = False
+        # An event for the thread to wait on during the choice dialog; will be
+        # fired when the choice has been made and the info is now accessible
+        self.choice_made = threading.Event()
         self.finished = None
 
     def stop(self):
@@ -271,8 +281,9 @@ def get_task_func(slug, func, kwargs):
         app.current_task.prompt = prompt
         app.current_task.choices = choices
         app.current_task.choices_allow_custom = allow_custom
+        app.current_task.choice_made = threading.Event()
         app.send_choice(slug)
-        sleep(20)
+        app.current_task.choice_made.wait()
 
     def new_func():
         with cprint.use_write_function(write_func), cinput.use_input_function(input_func):
@@ -280,7 +291,3 @@ def get_task_func(slug, func, kwargs):
                 yield obj
 
     return new_func
-
-
-if __name__ == '__main__':
-    main()
