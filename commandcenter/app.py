@@ -82,17 +82,21 @@ class CommandCenterApplication(Application):
         data = json.dumps(obj)
         self.loop.add_callback(self._write_message, slug, data)
 
-    def send_choice(self, slug):
-        if not self.current_task: return
+    @property
+    def is_choice_waiting(self):
+        if not self.current_task: return False
         else:
-            if self.current_task.slug != slug: return
-            if len(self.current_task.choices) == 0: return
+            if len(self.current_task.choices) == 0: return False
+        return True
+
+    def send_choice(self):
+        if not self.is_choice_waiting: return
         obj = dict(type='choice',
                    prompt=self.current_task.prompt,
                    choices=self.current_task.choices,
                    allow_custom=self.current_task.choices_allow_custom)
         data = json.dumps(obj)
-        self.loop.add_callback(self._write_message, slug, data)
+        self.loop.add_callback(self._write_message, self.current_task.slug, data)
 
     def _write_message(self, slug, data):
         """
@@ -184,10 +188,22 @@ class MessageHandler(WebSocketHandler):
         # send the current choice dialog (if one is present) every time a
         # connection is opened (in case page is reloaded while prompting for
         # choice)
-        app.send_choice(self.slug)
+        app.send_choice()
 
     def on_close(self):
         app.sockets[self.slug].remove(self)
+
+    def on_message(self, message):
+        # If we aren't waiting on a choice, ignore.
+        if not app.is_choice_waiting: return
+        # If this choice isn't in the list of allowed choices,
+        # but we aren't allowing custom choices, ignore.
+        if (not message in app.current_task.choices) and not app.current_task.choices_allow_custom:
+                return
+
+        app.current_task.choice = message
+        # wake up sleeping thread
+        app.current_task.choice_made.set()
 
 
 class NoCacheStaticFileHandler(StaticFileHandler):
@@ -206,6 +222,7 @@ class CommandTask(object):
         # The current choice prompt, possible choices, and whether custom
         # (i.e. fill in the text box) choices are allowed
         self.prompt = ""
+        self.choice = ""
         self.choices = []
         self.choices_allow_custom = False
         # An event for the thread to wait on during the choice dialog; will be
@@ -282,8 +299,9 @@ def get_task_func(slug, func, kwargs):
         app.current_task.choices = choices
         app.current_task.choices_allow_custom = allow_custom
         app.current_task.choice_made = threading.Event()
-        app.send_choice(slug)
+        app.send_choice()
         app.current_task.choice_made.wait()
+        return app.current_task.choice
 
     def new_func():
         with cprint.use_write_function(write_func), cinput.use_input_function(input_func):

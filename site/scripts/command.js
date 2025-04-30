@@ -59,7 +59,9 @@ ws.onmessage = (evt) => {
 }
 
 function choose(e) {
-  alert(e);
+  ws.send(e);
+  $("#choicebtns").empty();
+  $("#choice-modal").modal("toggle");
 }
 
 $('button.start').on('click', () => {

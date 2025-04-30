@@ -11,6 +11,7 @@ from commandcenter.mock_commands import fake_command
 def choice_test():
     from chirp.common.input import test
     test()
+    yield
 
 def new_artists():
     from chirp.library.do_dump_new_artists_in_dropbox import main_generator
