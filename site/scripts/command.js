@@ -41,10 +41,25 @@ ws.onmessage = (evt) => {
         plog('Command was stopped by user', 'highlight')
       }
       break
+    case 'choice':
+      playSound('choice');
+      $("#choice-prompt").html(obj.prompt);
+      for (var i = 0; i < obj.choices.length; i++) {
+        $("<button onclick='choose(this.innerHTML);'>").html(obj.choices[i]).appendTo($("#choicebtns"))
+        $("<br>").appendTo($("#choicebtns"));
+      }
+      if (obj.allow_custom) {
+        $("<input id='custom' default='Enter your choice...'></input><button onclick=\"choose(document.getElementById('custom').value);\">Submit</button>").appendTo($("#choicebtns"));
+      }
+      $("#choice-modal").modal({backdrop: 'static', keyboard: false});
     default:
       break
   }
   $(document).trigger('webSocketMessage', [obj])
+}
+
+function choose(e) {
+  alert(e);
 }
 
 $('button.start').on('click', () => {

@@ -13,6 +13,7 @@ from tornado.ioloop import IOLoop
 from tornado.web import Application, RequestHandler, StaticFileHandler
 from tornado.websocket import WebSocketHandler
 from tornado import gen
+from time import sleep
 
 if os.environ.get('MOCK'):
     from . import mock_commands as commands
@@ -29,6 +30,7 @@ COMMAND_PAGES = [
     ('import-music', commands.import_music),
     ('generate-traktor', commands.generate_traktor),
     ('upload', commands.upload),
+    ('choice-test', commands.choice_test),
 ]
 
 site_path = Path(__file__).parent.parent.absolute() / 'site'
@@ -77,6 +79,16 @@ class CommandCenterApplication(Application):
             if message is not None:
                 kwargs['value'] = message
 
+        data = json.dumps(obj)
+        self.loop.add_callback(self._write_message, slug, data)
+
+    def send_choice(self, slug):
+        if self.current_task.slug != slug: return
+        if len(self.current_task.choices == 0): return
+        obj = dict(type='choice',
+                   prompt=self.current_task.prompt,
+                   choices=self.current_task.choices,
+                   allow_custom=self.current_task.choices_allow_custom)
         data = json.dumps(obj)
         self.loop.add_callback(self._write_message, slug, data)
 
@@ -167,6 +179,7 @@ class MessageHandler(WebSocketHandler):
 
     def open(self):
         app.sockets[self.slug].add(self)
+        app.send_choice(self.slug)
 
     def on_close(self):
         app.sockets[self.slug].remove(self)
@@ -185,6 +198,9 @@ class CommandTask(object):
         self.future = None
         self.done_callbacks = []
         self.error_callbacks = []
+        self.prompt = ""
+        self.choices = []
+        self.choices_allow_custom = False
         self.finished = None
 
     def stop(self):
@@ -245,13 +261,21 @@ def render(template_name, **kwargs):
 
 def get_task_func(slug, func, kwargs):
     from chirp.common.printing import cprint
+    from chirp.common.input import cinput
 
     def write_func(message, **kwargs):
         app.write_message(slug, message, **kwargs)
         # print(message)
 
+    def input_func(prompt, choices: list[str], allow_custom: bool):
+        app.current_task.prompt = prompt
+        app.current_task.choices = choices
+        app.current_task.choices_allow_custom = allow_custom
+        app.send_choice(slug)
+        sleep(20)
+
     def new_func():
-        with cprint.use_write_function(write_func):
+        with cprint.use_write_function(write_func), cinput.use_input_function(input_func):
             for obj in func(**kwargs):
                 yield obj
 

@@ -6,8 +6,11 @@ import datetime
 
 from chirp.common.printing import cprint
 
-from mock_commands import fake_command
+from .mock_commands import fake_command
 
+def choice_test():
+    from chirp.common.input import test
+    test()
 
 def new_artists():
     from chirp.library.do_dump_new_artists_in_dropbox import main_generator
