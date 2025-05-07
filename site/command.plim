@@ -60,4 +60,4 @@ main.console
         h4.modal-title Select an Option
       .modal-body
         p.choice-prompt
-        .choicebtns
+        form.choicebtns

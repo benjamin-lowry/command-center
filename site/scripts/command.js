@@ -48,11 +48,11 @@ ws.onmessage = (evt) => {
       var choicebtns = modal.find(".choicebtns");
       modalbody.find(".choice-prompt").html(obj.prompt);
       for (var i = 0; i < obj.choices.length; i++) {
-        $("<button style='margin-bottom:2px;' class='btn btn-primary' onclick='choose(this.innerHTML);'>").html(obj.choices[i]).appendTo(choicebtns)
+        $("<button type='button' style='margin-bottom:2px;' class='btn btn-primary' onclick='choose(this.innerHTML);'>").html(obj.choices[i]).appendTo(choicebtns)
         $("<br>").appendTo(choicebtns);
       }
       if (obj.allow_custom) {
-        $("<input id='custom' default='Enter your choice...'></input><button onclick=\"choose(document.getElementById('custom').value);\" class='btn btn-primary'>Submit</button>").appendTo(choicebtns);
+        $("<input id='custom' default='Enter your choice...'></input><button type=\"submit\" onclick=\"event.preventDefault(); choose(document.getElementById('custom').value);\" class='btn btn-primary'>Submit</button>").appendTo(choicebtns);
       }
       modal.modal({backdrop: 'static', keyboard: false});
     default:
