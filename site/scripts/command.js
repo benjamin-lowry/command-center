@@ -43,15 +43,18 @@ ws.onmessage = (evt) => {
       break
     case 'choice':
       playSound('choice');
-      $("#choice-prompt").html(obj.prompt);
+      var modal = $("#template-modal").clone().prop("id", "active-modal").insertAfter("#template-modal");
+      var modalbody = modal.find(".modal-dialog .modal-content .modal-body");
+      var choicebtns = modal.find(".choicebtns");
+      modalbody.find(".choice-prompt").html(obj.prompt);
       for (var i = 0; i < obj.choices.length; i++) {
-        $("<button onclick='choose(this.innerHTML);'>").html(obj.choices[i]).appendTo($("#choicebtns"))
-        $("<br>").appendTo($("#choicebtns"));
+        $("<button style='margin-bottom:2px;' class='btn btn-primary' onclick='choose(this.innerHTML);'>").html(obj.choices[i]).appendTo(choicebtns)
+        $("<br>").appendTo(choicebtns);
       }
       if (obj.allow_custom) {
-        $("<input id='custom' default='Enter your choice...'></input><button onclick=\"choose(document.getElementById('custom').value);\">Submit</button>").appendTo($("#choicebtns"));
+        $("<input id='custom' default='Enter your choice...'></input><button onclick=\"choose(document.getElementById('custom').value);\" class='btn btn-primary'>Submit</button>").appendTo(choicebtns);
       }
-      $("#choice-modal").modal({backdrop: 'static', keyboard: false});
+      modal.modal({backdrop: 'static', keyboard: false});
     default:
       break
   }
@@ -60,8 +63,7 @@ ws.onmessage = (evt) => {
 
 function choose(e) {
   ws.send(e);
-  $("#choicebtns").empty();
-  $("#choice-modal").modal("toggle");
+  $("#active-modal").modal("hide").destroy();
 }
 
 $('button.start').on('click', () => {

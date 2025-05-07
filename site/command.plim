@@ -53,11 +53,11 @@ main.console
         button.btn.btn-default data-dismiss='modal' Close
 
 
-#choice-modal.modal class='fade'
+#template-modal.modal class='fade'
   .modal-dialog
     .modal-content
       .modal-header
         h4.modal-title Select an Option
       .modal-body
-        p#choice-prompt
-        #choicebtns
+        p.choice-prompt
+        .choicebtns
