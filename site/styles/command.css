@@ -41,6 +41,7 @@ header button.start, header button.stop {
   padding-top: 1em;
   padding-bottom: 1em;
   margin-bottom: 1em;
+  min-height: 55vh;
 }
 
 .console p {
@@ -61,4 +62,16 @@ header button.start, header button.stop {
 .console p.success {
   background-color: seagreen;
   color: white;
+}
+
+.btn {
+  background-color: #822036;
+}
+
+.btn:hover {
+  background-color: #bf2f4f !important;
+}
+
+a {
+  color: #822036;
 }

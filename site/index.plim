@@ -3,6 +3,9 @@
 -block page_title
   Home
 
+-block extrastyle
+  link rel='stylesheet' href='/styles/index.css'
+
 h1 CHIRP Command Center
 
 -if task is not None
@@ -23,4 +26,3 @@ p Welcome! What would you like to do?
   = button('Import new music files', '/import-music/')
   = button('Generate Traktor file', '/generate-traktor/')
   = button('Upload new data to DJDB', '/upload/')
-  = button('CHOICE TESTING', '/choice-test/')
