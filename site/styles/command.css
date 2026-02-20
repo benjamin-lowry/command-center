@@ -37,11 +37,12 @@ header button.start, header button.stop {
   background-color: black;
   color: lightgreen;
   font-family: monospace;
-  overflow-y: scroll;
+  overflow-y: auto;
   padding-top: 1em;
   padding-bottom: 1em;
   margin-bottom: 1em;
   min-height: 55vh;
+  max-height: 70vh;
 }
 
 .console p {
